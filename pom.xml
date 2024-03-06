@@ -9,13 +9,13 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.simple</groupId>
-	<artifactId>simple-cnb-test</artifactId>
+	<artifactId>simple-test</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>simple-cnb-test</name>
+	<name>simple-test</name>
 	<description>Test project for simple cnb</description>
 	<properties>
 		<java.version>17</java.version>
-		<image.name>simple-cnb-test</image.name>
+		<image.name>simple-test</image.name>
 		<image.tag>jammy</image.tag>
 		<build.arch>amd64</build.arch>
 	</properties>
@@ -41,4 +41,131 @@
 		</dependency>
 	</dependencies>
 
+
+   <profiles>
+        <profile>
+            <id>analysis</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-checkstyle-plugin</artifactId>
+                            <version>${maven-checkstyle-plugin.version}</version>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>com.puppycrawl.tools</groupId>
+                                    <artifactId>checkstyle</artifactId>
+                                    <version>${checkstyle.version}</version>
+                                </dependency>
+                            </dependencies>
+                            <executions>
+                                <execution>
+                                    <id>validate</id>
+                                    <phase>validate</phase>
+                                    <configuration>
+                                        <configLocation>${checkstyle-config.file}</configLocation>
+                                        <!-- <suppressionsLocation>${checkstyle-suppression.file}</suppressionsLocation>			 -->
+                                        <consoleOutput>false</consoleOutput>
+                                        <failsOnError>false</failsOnError>
+                                        <failOnViolation>false</failOnViolation>
+                                        <logViolationsToConsole>false</logViolationsToConsole>
+                                        <outputFileFormat>xml</outputFileFormat>
+                                        <excludes>**/generated/**/*</excludes>
+                                    </configuration>
+                                    <goals>
+                                        <goal>check</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>com.github.spotbugs</groupId>
+                            <artifactId>spotbugs-maven-plugin</artifactId>
+                            <version>${spotbugs-maven-plugin.version}</version>
+                            <configuration>
+                                <effort>Max</effort>
+                                <threshold>Low</threshold> <!-- low é para auditar categoria seguranca -->
+                                <failOnError>false</failOnError>
+                                <excludeFilterFile>${spotbugs-exclusion.path}</excludeFilterFile>
+                                <plugins>
+                                    <!-- Plugin para identificar problemas de segurança -->
+                                    <plugin>
+                                        <groupId>com.h3xstream.findsecbugs</groupId>
+                                        <artifactId>findsecbugs-plugin</artifactId>
+                                        <version>LATEST</version>
+                                    </plugin>
+                                </plugins>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>check</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${dependency-check-maven.version}</version>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <skip>${dependency-check-maven-plugin.skip}</skip>
+                            <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                            <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                            <formats>xml,html</formats>
+                            <connectionTimeout>600000</connectionTimeout>
+                            <autoUpdate>${dependency-check-maven-plugin.autoUpdate}</autoUpdate>
+                            <dataDirectory>${dependency-check-maven-plugin.database}</dataDirectory>
+                            <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>validate</id>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--Plugin Cyclone DX responsável por gerar o BOM.xml do projeto utilizado na integração com dependency track-->
+                    <plugin>
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>${cyclonedx-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>makeAggregateBom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <includeCompileScope>true</includeCompileScope>
+                            <includeProvidedScope>false</includeProvidedScope>
+                            <includeRuntimeScope>true</includeRuntimeScope>
+                            <includeSystemScope>true</includeSystemScope>
+                            <includeTestScope>false</includeTestScope>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+	</profiles>
 </project>
